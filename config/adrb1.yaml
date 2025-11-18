@@ -1,0 +1,6 @@
+gene: adrb1
+bam_directory: bam
+SNP_1: 145 # 1-based index
+SNP_2: 1165 # 1-based index
+haplotypes: [ag, ac, gc, gg]
+guide: resources/adrb1.fa

@@ -1,29 +1,35 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-description: main configuration schema for the workflow
+description: some
 properties:
-  samplesheet:
+  gene:
     type: string
-    description: path to sample-sheet TSV file
-
-  get_genome:
-    type: object
-    properties:
-      ncbi_ftp:
-        type: string
-        description: URL for genome retrieval
-    required: ["ncbi_ftp"]
-
-  simulate_reads:
-    type: object
-    properties:
-      read_length:
-        type: number
-        description: length of target reads in bp
-      read_number:
-        type: number
-        description: number of total reads to be simulated
+    description: name/identifier of gene from which the input reads are amplified
+  bam_directory:
+    type: string
+    description: path (absolute or relative to workflow directory) to a directory containing input BAM files
+  SNP_1:
+    type: integer
+    description: 1-based index of the first SNP in the haplotype
+  SNP_2:
+    type: integer
+    description: 1-based index of the second SNP in the haplotype
+  haplotypes:
+    type: array
+    description: an array containing four strings of two characters each representing the four possible haplotypes, e.g. ["ag", "ac", "gg", "gc"]
+  guide:
+    type: string
+    description: path (absolute or relative to workflow directory) to a FASTA file with a guide sequence used by pbaa to align and cluster reads
+  pbaa_options:
+    type: array
+    description: an array of strings, each of which is an option to pass to pbaa
+  slurm_options:
+    type: array
+    description: an array of strings, each of which is an option to pass to slurm
 
 required:
-  - samplesheet
-  - get_genome
-  - simulate_reads
+- gene
+- bam_directory
+- SNP_1
+- SNP_2
+- haplotypes
+- guide

@@ -1,0 +1,13 @@
+gene: test
+bam_directory: .test/bam
+SNP_1: 46 # 1-based index
+SNP_2: 79 # 1-based index
+haplotypes: [gg, ag, gc, ac]
+guide: guides/adrb2.fa
+pbaa_options:
+- --min-cluster-read-count=2
+slurm_options:
+- qos: test
+- nodes: 1
+- time: 00:01:00
+- mem-per-cpu: 1G

@@ -1,0 +1,14 @@
+{
+  "name": "Amplicon Haplotyping Devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "postCreateCommand": "samtools --version && python --version",
+  "extensions": [
+    "Snakemake.snakemake-lang"
+  ],
+  "forwardPorts": []
+}

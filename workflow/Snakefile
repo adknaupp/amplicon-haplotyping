@@ -1,37 +1,77 @@
-# Main entrypoint of the workflow.
-# Please follow the best practices:
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there.
+import glob
+import os
+from snakemake.utils import validate
 
+if config == {}:
+    print("Please provide configfile using --configfile.")
+    exit()
 
-# load configuration
-# -----------------------------------------------------
-configfile: "config/config.yaml"
+validate(config, schema="../config/schemas/config.schema.yaml")
 
+conda: "workflow/envs/global.yaml"
 
-# load rules
-# -----------------------------------------------------
-include: "rules/common.smk"
-include: "rules/process_reads.smk"
-
-
-# optional messages, log and error handling
-# -----------------------------------------------------
-onstart:
-    print("\n--- Analysis started ---\n")
-
-
-onsuccess:
-    print("\n--- Workflow finished! ---\n")
-
-
-onerror:
-    print("\n--- An error occurred! ---\n")
-
-
-# target rules
-# -----------------------------------------------------
 rule all:
     input:
-        "results/multiqc/multiqc_report.html",
+        f"results/{config['gene']}.haplotype_counts.csv"
     default_target: True
+
+SAMPLE_NAMES = [os.path.basename(f)[:-4] for f in glob.glob(f"{config['bam_directory']}/*.bam")]
+
+rule bam_to_fastq:
+    input:
+        lambda wc: f"{config['bam_directory']}/{wc.sample}.bam"
+    output:
+        "results/fastq/{sample}.fastq"
+    shell:
+        """
+        samtools fastq {input} > {output}
+        """
+
+rule index_fastq:
+    input:
+        "results/fastq/{sample}.fastq"
+    output:
+        "results/fastq/{sample}.fastq.fai"
+    shell:
+        """
+        samtools fqidx {input}
+        """
+
+rule run_pbaa:
+    input:
+        fastq="results/fastq/{sample}.fastq",
+        fai="results/fastq/{sample}.fastq.fai",
+        guide=config['guide']
+    output:
+        passed="results/pbaa/{sample}/{sample}_passed_cluster_sequences.fasta",
+        failed="results/pbaa/{sample}/{sample}_failed_cluster_sequences.fasta",
+        read_info="results/pbaa/{sample}/{sample}_read_info.txt"
+    params:
+        ' '.join(config['pbaa_options'] if 'pbaa_options' in config else [])
+    message:
+        "Running 'pbaa cluster {params} {input.guide} {input.fastq} results/pbaa/{wildcards.sample}/{wildcards.sample}'"
+    shell:
+        """
+        mkdir -p results/pbaa/{wildcards.sample}
+        pbaa cluster {params} {input.guide} {input.fastq} results/pbaa/{wildcards.sample}/{wildcards.sample}
+        """
+
+rule count_haplotypes:
+    input:
+        passed=expand(
+            "results/pbaa/{sample}/{sample}_passed_cluster_sequences.fasta", 
+            sample=SAMPLE_NAMES
+        ),
+        failed=expand(
+            "results/pbaa/{sample}/{sample}_failed_cluster_sequences.fasta", 
+            sample=SAMPLE_NAMES
+        ),
+        read_info=expand(
+            "results/pbaa/{sample}/{sample}_read_info.txt", sample=SAMPLE_NAMES
+        ),
+        fai=expand("results/fastq/{sample}.fastq.fai", sample=SAMPLE_NAMES)
+    output:
+        f"results/{config['gene']}.haplotype_counts.csv",
+        f"results/{config['gene']}.clusters_by_haplotype.csv"
+    script:
+        "scripts/count.py"
