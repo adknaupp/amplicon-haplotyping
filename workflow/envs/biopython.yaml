@@ -1,4 +1,4 @@
 channels:
-- bioconda
+  - bioconda
 dependencies:
-- biopython=1.86
+  - biopython=1.86
