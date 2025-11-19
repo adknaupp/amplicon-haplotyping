@@ -1,11 +1,9 @@
-# configuration of display in snakemake workflow catalog: https://snakemake.github.io/snakemake-workflow-catalog
-
 usage:
   mandatory-flags:
-    desc: # describe your flags here in a few sentences
-    flags: # put your flags here
+    desc: The workflow does not define a default config (although examples are available), so you must provide your own.
+    flags: --configfile
   software-stack-deployment:
-    conda: true # whether pipeline works with '--sdm conda'
-    apptainer: true # whether pipeline works with '--sdm apptainer/singularity'
-    apptainer+conda: true # whether pipeline works with '--sdm conda apptainer/singularity'
-    report: true # whether creation of reports using 'snakemake --report report.zip' is supported
+    conda: true
+    apptainer: false
+    apptainer+conda: false
+    report: false
